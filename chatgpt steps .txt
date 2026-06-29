@@ -1,0 +1,337 @@
+Step 1: Decide the Tech Stack
+
+I would suggest:
+
+Component	Tool
+Language	Python
+Parsing	re
+Storage	SQLite
+Backend	Flask
+Frontend	HTML + Bootstrap
+Graphs	Chart.js
+Detection Engine	Pure Python
+Threat Intel	requests
+Windows Logs	python-evtx
+Reports	pandas
+
+Avoid:
+
+Django
+React
+MongoDB
+Machine Learning
+
+Version 1 should be mostly Python.
+
+Step 2: Make the folders
+
+Inside ThreatLens:
+
+mkdir parsers
+mkdir detections
+mkdir samples
+mkdir database
+mkdir templates
+mkdir static
+
+Project structure:
+
+ThreatLens/
+
+parsers/
+detections/
+samples/
+database/
+templates/
+static/
+
+main.py
+Step 3: Get sample logs
+
+You need data.
+
+Create:
+
+samples/auth.log
+
+Paste:
+
+Jun 26 10:15:22 kali sshd[1234]: Failed password for root from 10.0.0.5 port 22 ssh2
+Jun 26 10:15:25 kali sshd[1234]: Failed password for root from 10.0.0.5 port 22 ssh2
+Jun 26 10:15:30 kali sshd[1234]: Failed password for root from 10.0.0.5 port 22 ssh2
+Jun 26 10:17:00 kali sshd[1234]: Accepted password for root from 10.0.0.5
+
+Forget downloading logs.
+
+Hardcode some.
+
+You can always add more later.
+
+Step 4: Write your first parser
+
+Create
+
+parsers/linux_parser.py
+
+Goal:
+
+Read log.
+
+Extract:
+
+timestamp
+username
+IP
+status
+
+Start with:
+
+import re
+
+
+pattern = r'Failed password for (\w+) from ([\d\.]+)'
+
+
+with open("samples/auth.log") as f:
+
+    for line in f:
+
+        match = re.search(pattern,line)
+
+        if match:
+
+            print(match.group(1))
+            print(match.group(2))
+
+Run.
+
+python parsers/linux_parser.py
+
+If it prints
+
+root
+
+10.0.0.5
+
+Congratulations.
+
+ThreatLens now exists.
+
+Step 5: Normalize data
+
+Instead of printing.
+
+Store.
+
+event = {
+
+"time":"...",
+
+
+"user":"root",
+
+
+"ip":"10.0.0.5",
+
+
+"action":"failed_login"
+
+}
+
+Append.
+
+events=[]
+
+
+events.append(event)
+
+Print.
+
+print(events)
+
+Goal:
+
+[
+{
+
+
+'user':'root',
+
+'ip':'10.0.0.5',
+
+'action':'failed_login'
+
+}
+]
+Step 6: Build your first detector
+
+Create.
+
+detections/bruteforce.py
+
+Simple.
+
+counter={}
+
+Loop.
+
+for e in events:
+
+    ip=e['ip']
+
+
+    counter[ip]=counter.get(ip,0)+1
+
+Detect.
+
+if counter[ip]>3:
+
+
+    print("ALERT")
+
+Output.
+
+ALERT
+
+10.0.0.5
+
+
+Bruteforce
+
+You are now writing detection logic.
+
+Step 7: Store alerts
+
+Create.
+
+database/alerts.db
+
+SQLite.
+
+import sqlite3
+
+Table.
+
+alerts
+
+
+id
+
+
+time
+
+
+ip
+
+
+severity
+
+
+description
+
+Insert.
+
+cursor.execute(...)
+Step 8: Build Flask
+
+Install.
+
+pip install flask
+
+Create.
+
+main.py
+
+Start.
+
+from flask import Flask
+
+
+app=Flask(__name__)
+
+Route.
+
+@app.route("/")
+
+Return.
+
+return "ThreatLens"
+
+Run.
+
+python main.py
+
+Browser.
+
+localhost:5000
+
+Success.
+
+Step 9: Dashboard
+
+Template.
+
+Total Logs
+
+Alerts
+
+
+Critical
+
+
+IPs
+
+Chart.js
+
+Pie.
+
+Bruteforce
+
+Success
+
+Sudo
+
+Step 10: Add cool features
+
+After V1 works.
+
+Order matters.
+
+Week 1
+
+Parser
+
+Bruteforce
+
+SQLite
+
+Flask
+
+Dashboard
+
+Week 2
+
+MITRE
+
+Timeline
+
+Correlations
+
+IOC lookup
+
+PDF reports
+
+Week 3
+
+AI anomaly detection
+
+Sigma Rules
+
+GeoIP
+
+Email alerts
+
+Elastic integration
+
+What you should do today
+
