@@ -174,3 +174,48 @@ if __name__ == "__main__":
     print("✓ Database   — WORKING (no crash = tables exist)")
     print("\nPipeline check complete.")
     print("="*50 + "\n")
+
+
+from detectors.priv_escalation import detect_priv_escalation
+
+# In your main block, after brute force:
+print("[*] Running privilege escalation detector...")
+priv_alerts = detect_priv_escalation()
+for alert in priv_alerts:
+    insert_alert(alert)
+
+
+from detectors.suspicious_login import detect_suspicious_logins
+
+print("[*] Running suspicious login detector...")
+susp_alerts = detect_suspicious_logins()
+for alert in susp_alerts:
+    insert_alert(alert)
+
+
+from parsers.mobile_parser import parse_mobile_log_file, detect_mobile_threats
+from database.storage import insert_events, insert_alert
+
+# Parse Android log
+android_events = parse_mobile_log_file("samples/android.log", "android")
+insert_events(android_events)
+
+# Parse iOS log
+ios_events = parse_mobile_log_file("samples/ios.log", "ios")
+insert_events(ios_events)
+
+# Detect threats across both
+mobile_alerts = detect_mobile_threats(android_events + ios_events)
+for alert in mobile_alerts:
+    insert_alert(alert)
+
+
+from parsers.firewall_parser import parse_firewall_log_file, detect_firewall_threats
+from database.storage import insert_events, insert_alert
+
+fw_events = parse_firewall_log_file("samples/firewall.log", vendor="auto")
+insert_events(fw_events)
+
+fw_alerts = detect_firewall_threats(fw_events)
+for alert in fw_alerts:
+    insert_alert(alert)

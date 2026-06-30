@@ -2,5 +2,6 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/database/storage.py" dialect="SQLite" />
+    <file url="file://$PROJECT_DIR$/detectors/priv_escalation.py" dialect="MySQL" />
   </component>
 </project>

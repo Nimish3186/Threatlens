@@ -1,0 +1,4 @@
+abuseipdb:
+  api_key: "e082ec44cead035a481b5b75a8a6a2a8e3c81cd5319a8c37bb1405ec63cd1b29f5366fbfc8dc2dc5"
+  cache_hours: 24      # don't re-query same IP within 24 hours
+  min_score_alert: 25  # flag IPs scoring above this
