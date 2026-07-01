@@ -1,0 +1,5 @@
+2025-06-27 10:15:32.841+0530 SpringBoard[1234] <Error>: Application crashed
+2025-06-27 10:16:01.002+0530 installd[5678] <Notice>: Installing com.evil.app unsigned
+2025-06-27 10:17:45.100+0530 kernel[0] <Warning>: Sandbox violation by pid 9999
+2025-06-27 10:18:00.500+0530 locationd[2222] <Error>: Unauthorized location access
+2025-06-27 10:19:30.000+0530 Cydia[3333] <Notice>: Package installed

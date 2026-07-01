@@ -68,6 +68,22 @@ def init_db():
             status          TEXT DEFAULT 'open'  -- open / investigating / resolved / false_positive
         )
     """)
+    # IOC CACHE TABLE — stores enrichment results to avoid repeat API calls
+    conn.execute("""
+                 CREATE TABLE IF NOT EXISTS ioc_cache
+                 (
+                     ip             TEXT PRIMARY KEY,
+                     queried_at     TEXT,
+                     abuse_score    INTEGER,
+                     total_reports  INTEGER,
+                     country_code   TEXT,
+                     isp            TEXT,
+                     usage_type     TEXT,
+                     last_reported  TEXT,
+                     is_whitelisted INTEGER,
+                     raw_response   TEXT
+                 )
+                 """)
 
     conn.commit()
     conn.close()
@@ -308,7 +324,59 @@ def get_summary() -> dict:
         "severity_breakdown": severity_breakdown,
         "type_breakdown":     type_breakdown,
     }
+def get_cached_ioc(ip: str, max_age_hours: int = 24) -> dict | None:
+    """Return cached enrichment if it exists and isn't stale."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        "SELECT * FROM ioc_cache WHERE ip = ?", (ip,)
+    ).fetchone()
+    conn.close()
 
+    if not row:
+        return None
+
+    # Check if cache is still fresh
+    queried_at = datetime.fromisoformat(row["queried_at"])
+    age_hours = (datetime.now() - queried_at).total_seconds() / 3600
+    if age_hours > max_age_hours:
+        return None  # stale — re-query
+
+    return dict(row)
+
+
+def save_ioc_cache(ioc: dict):
+    """Save or update an enrichment result in the cache."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("""
+        INSERT INTO ioc_cache
+        (ip, queried_at, abuse_score, total_reports, country_code,
+         isp, usage_type, last_reported, is_whitelisted, raw_response)
+        VALUES (?,?,?,?,?,?,?,?,?,?)
+        ON CONFLICT(ip) DO UPDATE SET
+            queried_at     = excluded.queried_at,
+            abuse_score    = excluded.abuse_score,
+            total_reports  = excluded.total_reports,
+            country_code   = excluded.country_code,
+            isp            = excluded.isp,
+            usage_type     = excluded.usage_type,
+            last_reported  = excluded.last_reported,
+            is_whitelisted = excluded.is_whitelisted,
+            raw_response   = excluded.raw_response
+    """, (
+        ioc["ip"],
+        ioc["queried_at"],
+        ioc["abuse_score"],
+        ioc["total_reports"],
+        ioc["country_code"],
+        ioc["isp"],
+        ioc["usage_type"],
+        ioc.get("last_reported"),
+        ioc.get("is_whitelisted", 0),
+        ioc.get("raw_response"),
+    ))
+    conn.commit()
+    conn.close()
 
 # ─────────────────────────────────────────────
 #  QUICK TEST — run this file directly to verify

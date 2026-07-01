@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Incidents — ThreatLens{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title">Incidents</div>
+        <div class="page-subtitle">alerts correlated by source IP and time window into attack narratives</div>
+    </div>
+    <div class="page-meta">{{ incidents|length }} incident{{ 's' if incidents|length != 1 }}</div>
+</div>
+
+<div class="panel">
+    {% if incidents %}
+        {% for incident in incidents %}
+        <a href="{{ url_for('incident_detail', incident_id=incident.id) }}" style="display: contents;">
+        <div class="alert-row" style="grid-template-columns: 4px 90px 1fr 100px 120px;">
+            <div class="alert-edge {{ incident.severity|severity_class }}"></div>
+            <span class="sev-tag {{ incident.severity|severity_class }}">{{ incident.severity }}</span>
+            <div>
+                <div class="alert-desc">{{ incident.narrative|truncate_text(95) }}</div>
+                {% if incident.is_full_chain %}
+                <span class="technique-tag" style="margin-top: 4px; display: inline-block; color: var(--sev-critical); border-color: var(--sev-critical);">full kill chain</span>
+                {% endif %}
+            </div>
+            <div class="alert-meta-ip">{{ incident.alert_count }} alerts</div>
+            <div class="alert-meta-time">{{ incident.source_ip }}</div>
+        </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">∅</div>
+            No correlated incidents yet. Incidents form when 2+ alerts share an IP within the correlation window.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

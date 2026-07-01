@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Incident #{{ incident.id }} — ThreatLens{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title">Incident #{{ incident.id }}</div>
+        <div class="page-subtitle mono">{{ incident.source_ip }}</div>
+    </div>
+    <span class="sev-tag {{ incident.severity|severity_class }}">{{ incident.severity }}</span>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">Narrative</div>
+    </div>
+    <div style="padding: 18px;">
+        <p style="font-size: 14px; margin: 0 0 12px;">{{ incident.narrative }}</p>
+        {% if incident.is_full_chain %}
+        <span class="sev-tag critical">full attack chain detected</span>
+        {% endif %}
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 18px;">
+            <div>
+                <div class="stat-label">Alerts correlated</div>
+                <div style="font-size: 14px; margin-top: 4px;">{{ incident.alert_count }}</div>
+            </div>
+            <div>
+                <div class="stat-label">Log sources</div>
+                <div style="font-size: 14px; margin-top: 4px;">{{ incident.distinct_sources|join(', ') }}</div>
+            </div>
+            <div>
+                <div class="stat-label">Duration</div>
+                <div class="mono" style="font-size: 13px; margin-top: 4px;">{{ incident.first_seen|short_time }} → {{ incident.last_seen|short_time }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">Kill chain timeline</div>
+    </div>
+    <div style="padding: 18px;">
+        <div class="timeline">
+            {% for step in incident.timeline %}
+            <div class="timeline-item">
+                <div class="timeline-dot {{ step.severity|severity_class }}"></div>
+                <div class="timeline-time">
+                    {{ step.timestamp|short_time }}
+                    <span class="timeline-source">{{ step.log_source }}</span>
+                </div>
+                <div class="timeline-desc">{{ step.description }}</div>
+                <a href="{{ url_for('alert_detail', alert_id=step.alert_id) }}" class="panel-link" style="font-size: 11px;">view alert →</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">Techniques involved</div>
+    </div>
+    <div style="padding: 18px; display: flex; gap: 8px; flex-wrap: wrap;">
+        {% for attack_id in incident.attack_ids %}
+        <span class="technique-tag">{{ attack_id }}</span>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">Remediation</div>
+    </div>
+    <div style="padding: 18px;">
+        <div class="remediation-list">{{ incident.remediation }}</div>
+    </div>
+</div>
+{% endblock %}

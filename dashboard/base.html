@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ThreatLens{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=2) }}">
+</head>
+<body>
+    <div class="shell">
+        <nav class="sidebar">
+            <div class="brand">
+                <div class="brand-mark">
+                    <span class="dot"></span>
+                    THREATLENS
+                </div>
+                <div class="brand-sub">log correlation engine</div>
+            </div>
+            <div class="nav-section">
+                <a href="{{ url_for('dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+                    overview
+                </a>
+                <a href="{{ url_for('alerts_view') }}" class="nav-link {% if active_page == 'alerts' %}active{% endif %}">
+                    alerts
+                </a>
+                <a href="{{ url_for('incidents_view') }}" class="nav-link {% if active_page == 'incidents' %}active{% endif %}">
+                    incidents
+                </a>
+                <a href="{{ url_for('attack_matrix') }}" class="nav-link {% if active_page == 'attack-matrix' %}active{% endif %}">
+                    att&amp;ck matrix
+                </a>
+                <a href="{{ url_for('events_view') }}" class="nav-link {% if active_page == 'events' %}active{% endif %}">
+                    raw events
+                </a>
+            </div>
+        </nav>
+        <main class="main">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

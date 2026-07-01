@@ -117,6 +117,10 @@ def build_alert(ip: str, matching_events: list[dict], window_hits: list) -> dict
     }
 
 
+def get_timestamp(pair):
+    return pair[0]
+
+
 def detect_brute_force() -> list[dict]:
     """Main entry point. Returns a list of alert dicts."""
     events = fetch_failed_logins()
@@ -141,7 +145,7 @@ def detect_brute_force() -> list[dict]:
     alerts = []
 
     for ip, ts_event_pairs in ip_events.items():
-        ts_event_pairs.sort(key=lambda x: x[0])
+        ts_event_pairs.sort(key=get_timestamp)
         timestamps = [ts for ts, _ in ts_event_pairs]
         matched_events = [ev for _, ev in ts_event_pairs]
 

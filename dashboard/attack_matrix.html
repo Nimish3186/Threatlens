@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}ATT&amp;CK Matrix — ThreatLens{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title">ATT&amp;CK matrix</div>
+        <div class="page-subtitle">techniques detected across your environment, grouped by tactic</div>
+    </div>
+    <div class="page-meta">{{ coverage.total_techniques }} technique{{ 's' if coverage.total_techniques != 1 }} · {{ coverage.total_tactics }} tactic{{ 's' if coverage.total_tactics != 1 }}</div>
+</div>
+
+<div class="panel">
+    <div style="padding: 18px;">
+        {% if coverage.techniques %}
+            {% for tactic_name, tactic_count in coverage.tactics.items() %}
+            <div class="matrix-tactic">
+                <div class="matrix-tactic-name">{{ tactic_name }} — {{ tactic_count }} detection{{ 's' if tactic_count != 1 }}</div>
+                <div class="matrix-grid">
+                    {% for tech in coverage.techniques %}
+                        {% if tech.tactic == tactic_name %}
+                        <div class="matrix-cell detected">
+                            <div class="matrix-cell-id">{{ tech.id }}</div>
+                            <div class="matrix-cell-name">{{ tech.name }}</div>
+                            <div class="matrix-cell-count">{{ tech.count }} alert{{ 's' if tech.count != 1 }}</div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">∅</div>
+                No techniques detected yet. Run your detectors to populate the matrix.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

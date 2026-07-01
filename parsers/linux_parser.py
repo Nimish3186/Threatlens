@@ -107,24 +107,6 @@ def parse_line(line: str, log_type: str = "syslog") -> Optional[dict]:
 
 
 
-'''def parse_log_file(filepath: str, log_type: str = "syslog") -> list[dict]:
-    """Read an entire log file, return list of parsed event dicts."""
-    if not os.path.exists(filepath):
-        raise FileNotFoundError(f"Log file not found: {filepath}")
-
-    results = []
-    skipped = 0
-
-    with open(filepath, "r", encoding="utf-8", errors="replace") as f:
-        for line in f:
-            parsed = parse_line(line, log_type=log_type)
-            if parsed:
-                results.append(parsed)
-            else:
-                skipped += 1
-
-    print(f"[parser] {filepath}: {len(results)} parsed, {skipped} skipped")
-    return results'''
 
 def parse_log_file(filepath: str, log_type: str = "syslog") -> list[dict]:
     if not os.path.exists(filepath):

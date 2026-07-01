@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Overview — ThreatLens{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title">Overview</div>
+        <div class="page-subtitle">current security posture across all connected log sources</div>
+    </div>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-label">Open alerts</div>
+        <div class="stat-value">{{ summary.open_alerts }}</div>
+        <div class="stat-detail">of {{ summary.total_alerts }} total</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Critical severity</div>
+        <div class="stat-value sev-critical">{{ summary.severity_breakdown.get('CRITICAL', 0) }}</div>
+        <div class="stat-detail">requires immediate action</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">High severity</div>
+        <div class="stat-value sev-high">{{ summary.severity_breakdown.get('HIGH', 0) }}</div>
+        <div class="stat-detail">needs investigation</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Events parsed</div>
+        <div class="stat-value">{{ summary.total_events }}</div>
+        <div class="stat-detail">across all sources</div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">Highest priority alerts</div>
+        <a href="{{ url_for('alerts_view') }}" class="panel-link">view all →</a>
+    </div>
+    {% if alerts %}
+        {% for alert in alerts %}
+        <a href="{{ url_for('alert_detail', alert_id=alert.id) }}" style="display: contents;">
+        <div class="alert-row">
+            <div class="alert-edge {{ alert.severity|severity_class }}"></div>
+            <span class="sev-tag {{ alert.severity|severity_class }}">{{ alert.severity }}</span>
+            <div class="alert-desc">{{ alert.description|truncate_text(90) }}</div>
+            <div class="alert-meta-ip">{{ alert.source_ip }}</div>
+            <div class="alert-meta-time">{{ alert.first_seen|short_time }}</div>
+        </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">∅</div>
+            No alerts yet. Run your detectors to populate this view.
+        </div>
+    {% endif %}
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">Correlated incidents</div>
+        <a href="{{ url_for('incidents_view') }}" class="panel-link">view all →</a>
+    </div>
+    {% if incidents %}
+        {% for incident in incidents %}
+        <a href="{{ url_for('incident_detail', incident_id=incident.id) }}" style="display: contents;">
+        <div class="alert-row">
+            <div class="alert-edge {{ incident.severity|severity_class }}"></div>
+            <span class="sev-tag {{ incident.severity|severity_class }}">{{ incident.severity }}</span>
+            <div class="alert-desc">{{ incident.narrative|truncate_text(90) }}</div>
+            <div class="alert-meta-ip">{{ incident.source_ip }}</div>
+            <div class="alert-meta-time">{{ incident.alert_count }} alerts</div>
+        </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">∅</div>
+            No correlated incidents detected. This is good news — or you need more alerts to correlate.
+        </div>
+    {% endif %}
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">ATT&amp;CK tactic coverage</div>
+        <a href="{{ url_for('attack_matrix') }}" class="panel-link">full matrix →</a>
+    </div>
+    <div style="padding: 18px;">
+        {% if coverage.tactics %}
+            <div class="matrix-grid">
+                {% for tactic, count in coverage.tactics.items() %}
+                <div class="matrix-cell detected">
+                    <div class="matrix-cell-name">{{ tactic }}</div>
+                    <div class="matrix-cell-count">{{ count }} detection{{ 's' if count != 1 }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="color: var(--text-muted); font-size: 13px;">No ATT&amp;CK techniques mapped yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

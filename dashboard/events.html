@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Events — ThreatLens{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title">Raw events</div>
+        <div class="page-subtitle">most recent 200 parsed log lines across all sources</div>
+    </div>
+    <div class="page-meta">{{ events|length }} shown</div>
+</div>
+
+<div class="filter-bar">
+    <a href="{{ url_for('events_view') }}" class="filter-chip {% if current_log_type == 'ALL' %}active{% endif %}">all</a>
+    {% for lt in log_types %}
+    <a href="{{ url_for('events_view', log_type=lt) }}" class="filter-chip {% if current_log_type == lt %}active{% endif %}">{{ lt }}</a>
+    {% endfor %}
+</div>
+
+<div class="panel">
+    {% if events %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Source</th>
+                <th>Host</th>
+                <th>IP</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr>
+                <td class="mono">{{ event.timestamp|short_time }}</td>
+                <td><span class="technique-tag">{{ event.log_type }}</span></td>
+                <td class="mono">{{ event.hostname or '—' }}</td>
+                <td class="mono">{{ event.source_ip or '—' }}</td>
+                <td>{{ event.message|truncate_text(90) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">∅</div>
+            No events parsed yet.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

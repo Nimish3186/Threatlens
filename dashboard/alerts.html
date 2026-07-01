@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Alerts — ThreatLens{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title">Alerts</div>
+        <div class="page-subtitle">every detection across all log sources, sorted by severity</div>
+    </div>
+    <div class="page-meta">{{ alerts|length }} result{{ 's' if alerts|length != 1 }}</div>
+</div>
+
+<div class="filter-bar">
+    <a href="{{ url_for('alerts_view') }}" class="filter-chip {% if current_severity == 'ALL' and current_type == 'ALL' %}active{% endif %}">all</a>
+    <a href="{{ url_for('alerts_view', severity='CRITICAL') }}" class="filter-chip {% if current_severity == 'CRITICAL' %}active{% endif %}">critical</a>
+    <a href="{{ url_for('alerts_view', severity='HIGH') }}" class="filter-chip {% if current_severity == 'HIGH' %}active{% endif %}">high</a>
+    <a href="{{ url_for('alerts_view', severity='MEDIUM') }}" class="filter-chip {% if current_severity == 'MEDIUM' %}active{% endif %}">medium</a>
+    <a href="{{ url_for('alerts_view', severity='LOW') }}" class="filter-chip {% if current_severity == 'LOW' %}active{% endif %}">low</a>
+    <span style="width: 1px; background: var(--border-hairline); margin: 0 4px;"></span>
+    {% for t in alert_types %}
+    <a href="{{ url_for('alerts_view', type=t) }}" class="filter-chip {% if current_type == t %}active{% endif %}">{{ t|replace('_', ' ') }}</a>
+    {% endfor %}
+</div>
+
+<div class="panel">
+    {% if alerts %}
+        {% for alert in alerts %}
+        <a href="{{ url_for('alert_detail', alert_id=alert.id) }}" style="display: contents;">
+        <div class="alert-row">
+            <div class="alert-edge {{ alert.severity|severity_class }}"></div>
+            <span class="sev-tag {{ alert.severity|severity_class }}">{{ alert.severity }}</span>
+            <div class="alert-desc">{{ alert.description|truncate_text(100) }}</div>
+            <div class="alert-meta-ip">{{ alert.source_ip }}</div>
+            <div class="alert-meta-time">{{ alert.first_seen|short_time }}</div>
+        </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">∅</div>
+            No alerts match this filter.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

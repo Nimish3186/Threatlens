@@ -127,8 +127,17 @@ def classify_event(event: dict) -> dict | None:
             return None
 
         # Check if command is dangerous
-        is_dangerous = any(danger in command for danger in DANGEROUS_COMMANDS)
-        touches_critical = any(f in command for f in CRITICAL_FILES)
+        is_dangerous = False
+        for danger in DANGEROUS_COMMANDS:
+            if danger in command:
+                is_dangerous = True
+                break
+
+        touches_critical = False
+        for f in CRITICAL_FILES:
+            if f in command:
+                touches_critical = True
+                break
 
         severity   = "CRITICAL" if touches_critical else ("HIGH" if is_dangerous else "MEDIUM")
         confidence = "HIGH"     if is_dangerous     else "MEDIUM"
@@ -375,64 +384,8 @@ def detect_priv_escalation() -> list[dict]:
 # ─────────────────────────────────────────────
 
 if __name__ == "__main__":
-    from database.storage import init_db, insert_events, insert_alert, get_alerts
-
+    from database.storage import init_db
     init_db()
-
-    # Inject fake events that cover every detection subtype
-    fake_events = [
-        {   # sudo shell spawn — HIGH
-            "log_type": "syslog", "timestamp": "2025-06-27T10:17:45",
-            "hostname": "kali-system", "source_ip": "", "process": "sudo", "pid": "1350",
-            "message": "nimish : TTY=pts/0 ; PWD=/home/nimish ; USER=root ; COMMAND=/bin/bash",
-            "raw": "Jun 27 10:17:45 kali-system sudo[1350]: nimish : TTY=pts/0 ; USER=root ; COMMAND=/bin/bash",
-        },
-        {   # sudoers edit — CRITICAL
-            "log_type": "syslog", "timestamp": "2025-06-27T10:21:05",
-            "hostname": "kali-system", "source_ip": "", "process": "sudo", "pid": "1410",
-            "message": "nimish : TTY=pts/0 ; PWD=/home/nimish ; USER=root ; COMMAND=/bin/nano /etc/sudoers",
-            "raw": "Jun 27 10:21:05 kali-system sudo[1410]: nimish : USER=root ; COMMAND=/bin/nano /etc/sudoers",
-        },
-        {   # su to root — HIGH
-            "log_type": "syslog", "timestamp": "2025-06-27T10:18:01",
-            "hostname": "kali-system", "source_ip": "", "process": "su", "pid": "1401",
-            "message": "Successful su for root by nimish",
-            "raw": "Jun 27 10:18:01 kali-system su[1401]: Successful su for root by nimish",
-        },
-        {   # root session opened — HIGH
-            "log_type": "syslog", "timestamp": "2025-06-27T10:16:11",
-            "hostname": "kali-system", "source_ip": "203.0.113.45", "process": "sshd", "pid": "1301",
-            "message": "pam_unix(sshd:session): session opened for user root(uid=0) by (uid=0)",
-            "raw": "Jun 27 10:16:11 kali-system sshd[1301]: pam_unix(sshd:session): session opened for user root(uid=0) by (uid=0)",
-        },
-        {   # dangerous chmod — HIGH
-            "log_type": "syslog", "timestamp": "2025-06-27T10:19:22",
-            "hostname": "kali-system", "source_ip": "", "process": "sudo", "pid": "1402",
-            "message": "nimish : USER=root ; COMMAND=/bin/chmod 777 /etc/passwd",
-            "raw": "Jun 27 10:19:22 kali-system sudo[1402]: nimish : USER=root ; COMMAND=/bin/chmod 777 /etc/passwd",
-        },
-        {   # new user created — MEDIUM
-            "log_type": "syslog", "timestamp": "2025-06-27T10:22:30",
-            "hostname": "kali-system", "source_ip": "", "process": "useradd", "pid": "1450",
-            "message": "new user: name=backdoor, UID=1337, GID=1337, home=/home/backdoor",
-            "raw": "Jun 27 10:22:30 kali-system useradd[1450]: new user: name=backdoor, UID=1337",
-        },
-        {   # safe sudo (apt update) — should NOT trigger
-            "log_type": "syslog", "timestamp": "2025-06-27T10:17:46",
-            "hostname": "kali-system", "source_ip": "", "process": "sudo", "pid": "1350",
-            "message": "nimish : TTY=pts/0 ; USER=root ; COMMAND=/usr/bin/apt update",
-            "raw": "Jun 27 10:17:46 kali-system sudo[1350]: nimish : USER=root ; COMMAND=/usr/bin/apt update",
-        },
-    ]
-
-    insert_events(fake_events)
+    print("Running privilege escalation detector on current database...")
     alerts = detect_priv_escalation()
-
-    for a in alerts:
-        insert_alert(a)
-
-    print(f"\n=== {len(alerts)} ALERTS STORED ===")
-    for a in get_alerts():
-        if a["alert_type"] == "priv_escalation":
-            print(f"\n  [{a['severity']}] {a['attack_id']} — {a['description']}")
-            print(f"  Remediation preview: {a['remediation'].splitlines()[0]}")
+    print(f"Generated {len(alerts)} alerts.")

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Alert #{{ alert.id }} — ThreatLens{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title">Alert #{{ alert.id }}</div>
+        <div class="page-subtitle">{{ alert.alert_type|replace('_', ' ') }}</div>
+    </div>
+    <span class="sev-tag {{ alert.severity|severity_class }}">{{ alert.severity }}</span>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">Summary</div>
+    </div>
+    <div style="padding: 18px;">
+        <p style="font-size: 14px; margin: 0 0 16px;">{{ alert.description }}</p>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 8px;">
+            <div>
+                <div class="stat-label">Source IP</div>
+                <div class="mono" style="font-size: 14px; margin-top: 4px;">{{ alert.source_ip or '—' }}</div>
+            </div>
+            <div>
+                <div class="stat-label">Target</div>
+                <div class="mono" style="font-size: 14px; margin-top: 4px;">{{ alert.target_user or '—' }}@{{ alert.target_host or '—' }}</div>
+            </div>
+            <div>
+                <div class="stat-label">Confidence</div>
+                <div style="font-size: 14px; margin-top: 4px;">{{ alert.confidence }}</div>
+            </div>
+            <div>
+                <div class="stat-label">First seen</div>
+                <div class="mono" style="font-size: 13px; margin-top: 4px;">{{ alert.first_seen|short_time }}</div>
+            </div>
+            <div>
+                <div class="stat-label">Last seen</div>
+                <div class="mono" style="font-size: 13px; margin-top: 4px;">{{ alert.last_seen|short_time }}</div>
+            </div>
+            <div>
+                <div class="stat-label">Event count</div>
+                <div style="font-size: 14px; margin-top: 4px;">{{ alert.event_count }}{% if alert.window_secs %} in {{ alert.window_secs }}s{% endif %}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">ATT&amp;CK mapping</div>
+    </div>
+    <div style="padding: 18px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <span class="technique-tag">{{ alert.attack_id }}</span>
+            <span style="font-size: 14px; font-weight: 500;">{{ alert.attack_name }}</span>
+        </div>
+        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+            Tactic: {{ alert.attack_tactic }}
+        </div>
+        {% if technique.description %}
+        <div style="font-size: 13px; color: var(--text-secondary);">{{ technique.description }}</div>
+        {% endif %}
+        {% if technique.url %}
+        <div style="margin-top: 10px;">
+            <a href="{{ technique.url }}" target="_blank" class="panel-link">view on attack.mitre.org →</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">Raw evidence</div>
+    </div>
+    <div style="padding: 18px;">
+        {% if raw_events %}
+            {% for line in raw_events %}
+            <div class="evidence-block">{{ line }}</div>
+            {% endfor %}
+        {% else %}
+            <div style="color: var(--text-muted); font-size: 13px;">No raw log lines attached to this alert.</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">Remediation</div>
+    </div>
+    <div style="padding: 18px;">
+        <div class="remediation-list">{{ alert.remediation }}</div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div class="panel-title">Investigation status</div>
+    </div>
+    <div style="padding: 18px;">
+        <form method="POST" action="{{ url_for('update_status', alert_id=alert.id) }}" class="btn-group">
+            <select name="status" class="status-select">
+                <option value="open" {% if alert.status == 'open' %}selected{% endif %}>Open</option>
+                <option value="investigating" {% if alert.status == 'investigating' %}selected{% endif %}>Investigating</option>
+                <option value="resolved" {% if alert.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                <option value="false_positive" {% if alert.status == 'false_positive' %}selected{% endif %}>False positive</option>
+            </select>
+            <button type="submit" class="btn-primary">Update status</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
